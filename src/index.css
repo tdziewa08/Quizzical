@@ -48,6 +48,14 @@ body {
   width: 100%;
 }
 
+.correct {
+  background-color: green;
+}
+
+.answers-correct {
+  background-color: green;
+}
+
 .answers > span {
   border: 1px solid red;
   margin-right: 2em;

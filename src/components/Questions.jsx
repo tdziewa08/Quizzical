@@ -6,6 +6,7 @@ export default function Questions() {
 
     const [theData, setTheData] = React.useState([])
     const [correctAnswers, setTheCorrectAnswers] = React.useState([])
+    const [correctCount, setCorrectCount] = React.useState(0)
     console.log("CORRECT ANSWERS: " + correctAnswers)
 
     function shuffleArray(array) {
@@ -24,7 +25,7 @@ export default function Questions() {
                 setTheCorrectAnswers(data.results.map(item => decode(item.correct_answer)))
                 setTheData(
                     [...data.results].map(item => {
-                        return {...item, allAnswers : shuffleArray([item.correct_answer, ...item.incorrect_answers])}
+                        return {...item, isRight: false, isUserChoice: false, allAnswers : shuffleArray([decode(item.correct_answer), ...item.incorrect_answers.map(item => decode(item))])}
                     }))
                 })
             }, [])
@@ -34,17 +35,18 @@ export default function Questions() {
         return (
             <div className="question">
                 <p>{decode(item.question)}</p>
-                <div className="answers">
+                <div className={`answers${item.isRight ? "-correct" : "-wrong"}`}>
                     {item.allAnswers.map(answer => {
                         return (
                             <label>
                                 <input
+                                    // className={`${item.isRight ? "correct" : "-wrong"}`} this doesnt even work becase the allAnswers array DOES NOT contain objects...
                                     type="radio"
                                     name={`answer-${qIdx + 1}`}
-                                    value={decode(answer)}
+                                    value={answer}
                                     required
                                 />
-                                {decode(answer)}
+                                {answer}
                             </label>
                         )
                     })}
@@ -59,21 +61,77 @@ export default function Questions() {
         console.log("Submitted but not refreshed")
         const form = e.target
         const formData = new FormData(form)
-        const answer1 = formData.get("answer-1")
-        const answer2 = formData.get("answer-2")
-        const answer3 = formData.get("answer-3")
-        const answer4 = formData.get("answer-4")
-        const answer5 = formData.get("answer-5")
+        // const answer1 = formData.get("answer-1")
+        // const answer2 = formData.get("answer-2")
+        // const answer3 = formData.get("answer-3")
+        // const answer4 = formData.get("answer-4")
+        // const answer5 = formData.get("answer-5")
         const userAnswers = Array.from(formData.values())
         console.log("USER ANSWERS: " + userAnswers)
 
-        for(let i = 0; i < correctAnswers.length; i++)
-        {
-            if(userAnswers[i] === correctAnswers[i])
-            {
-                console.log("CORRECT DUING DING DING")
-            }
-        }
+        correctAnswers.find(answer => {
+            userAnswers.find(userAnswer => {
+                if(answer === userAnswer)
+                {
+                    console.log("Answer is correct!!")
+                    theData.find(item => {
+                        if(item.correct_answer === userAnswer)
+                        {
+                            console.log("I HAVE ACCESS TO THE OBJECT HERE IT IS..." + item)
+                            setTheData(prevArray =>
+                                prevArray.map(q =>
+                                    q.correct_answer === userAnswer
+                                        ? { ...q, isRight: true }
+                                        : q
+                                )
+                            )
+                        }
+                    })
+                }
+            })
+        })
+        
+        //set the correct answers to show up regardless of if the user chose them
+        correctAnswers.find(correctAnswer => {
+            theData.find(item => {
+                if(item.correct_answer === correctAnswer)
+                {
+                    setTheData(prevArray => (
+                        prevArray.map(question => (
+                            q.correct_answer === correctAnswer ? {...question, isRight: true} : q
+                        ))
+                    ))
+                }
+            })
+        })
+
+        //this is kinda working but I need to be more granular. I need the specific item in allAnswers to have a boolean value changed so ONLY that option is colored RED.
+        //my current method would change a boolean for the whole question object so applying the boolean to an input option would make them all colored...
+
+        //i might ask Copilot for tips but not the whole solution
+
+
+
+
+        // correctAnswers.find(correctAnswer => {
+        //     userAnswers.find(userAnswer => {
+        //         if(correctAnswer === userAnswer)
+        //         {
+        //             theData.find(item => {
+        //                 if(item.allAnswers.includes(userAnswer))
+        //                 {
+        //                     setTheData(prevArray => (
+        //                         prevArray.map(question => (
+
+        //                         ))
+        //                     ))
+        //                 }
+        //             })
+        //             setCorrectCount(prevCount => prevCount + 1)
+        //         }
+        //     })
+        // })
+
     }
 
     return (
