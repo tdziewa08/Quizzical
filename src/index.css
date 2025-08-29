@@ -48,12 +48,38 @@ body {
   width: 100%;
 }
 
-.correct {
-  background-color: green;
+.label-button {
+  display: inline-flex; /* or inline-flex */
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  margin-right: 10px; /* Adjust spacing as needed */
 }
 
-.answers-correct {
-  background-color: green;
+.label-button > input[type="radio"] {
+  appearance: none;
+  height: 0;
+  width: 0;
+  margin: 0;
+}
+
+.label-button:has(input[type="radio"]:checked) {
+  background-color: lightblue;
+}
+
+.-chosen {
+  background-color: red;
+}
+
+.-correct {
+  background-color: limegreen;
+}
+
+.-chosen .-correct {
+  background-color: limegreen;
 }
 
 .answers > span {

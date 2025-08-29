@@ -7,6 +7,9 @@ export default function Questions() {
     const [theData, setTheData] = React.useState([])
     const [correctAnswers, setTheCorrectAnswers] = React.useState([])
     const [correctCount, setCorrectCount] = React.useState(0)
+    const [isSubmitted, setIsSubmitted] = React.useState(false)
+    const [newGame, setNewGame] = React.useState(false)
+
     console.log("CORRECT ANSWERS: " + correctAnswers)
 
     function shuffleArray(array) {
@@ -25,28 +28,37 @@ export default function Questions() {
                 setTheCorrectAnswers(data.results.map(item => decode(item.correct_answer)))
                 setTheData(
                     [...data.results].map(item => {
-                        return {...item, isRight: false, isUserChoice: false, allAnswers : shuffleArray([decode(item.correct_answer), ...item.incorrect_answers.map(item => decode(item))])}
+                        return {
+                            ...item,
+                            allAnswers: shuffleArray(
+                                [
+                                    {text: decode(item.correct_answer), isChosen: false, isCorrect: false},
+                                    ...item.incorrect_answers.map(item => ({text: decode(item), isChosen: false, isCorrect: false}))
+                                ]
+                            )
+                        }
                     }))
                 })
-            }, [])
+                setIsSubmitted(false)
+            }, [newGame])
 
     const questions = theData.length > 0
     ? theData.map((item, qIdx) => {
         return (
             <div className="question">
                 <p>{decode(item.question)}</p>
-                <div className={`answers${item.isRight ? "-correct" : "-wrong"}`}>
+                <div className="answers">
                     {item.allAnswers.map(answer => {
                         return (
-                            <label>
-                                <input
-                                    // className={`${item.isRight ? "correct" : "-wrong"}`} this doesnt even work becase the allAnswers array DOES NOT contain objects...
+                            <label className={`label-button ${answer.isChosen ? "-chosen" : ""} ${answer.isCorrect ? "-correct" : ""}`}>
+                                <input 
                                     type="radio"
                                     name={`answer-${qIdx + 1}`}
-                                    value={answer}
+                                    value={answer.text}
                                     required
+                                    disabled={isSubmitted}
                                 />
-                                {answer}
+                                {answer.text}
                             </label>
                         )
                     })}
@@ -61,89 +73,76 @@ export default function Questions() {
         console.log("Submitted but not refreshed")
         const form = e.target
         const formData = new FormData(form)
-        // const answer1 = formData.get("answer-1")
-        // const answer2 = formData.get("answer-2")
-        // const answer3 = formData.get("answer-3")
-        // const answer4 = formData.get("answer-4")
-        // const answer5 = formData.get("answer-5")
         const userAnswers = Array.from(formData.values())
         console.log("USER ANSWERS: " + userAnswers)
 
-        correctAnswers.find(answer => {
-            userAnswers.find(userAnswer => {
-                if(answer === userAnswer)
-                {
-                    console.log("Answer is correct!!")
-                    theData.find(item => {
-                        if(item.correct_answer === userAnswer)
-                        {
-                            console.log("I HAVE ACCESS TO THE OBJECT HERE IT IS..." + item)
-                            setTheData(prevArray =>
-                                prevArray.map(q =>
-                                    q.correct_answer === userAnswer
-                                        ? { ...q, isRight: true }
-                                        : q
+        //set isCorrect to update UI with the correct answers
+         correctAnswers.find(correctAnswer => {
+             theData.find(item => {
+                 if(item.correct_answer === correctAnswer)
+                 {
+                     setTheData(prevArray => (
+                         prevArray.map(question => ({
+                            ...question,
+                            allAnswers: question.allAnswers.map(answer => (
+                                answer.text === correctAnswer ? {...answer, isCorrect: true} : answer
+                            ))
+                         }   
+                         ))
+                     ))
+                 }
+             })
+         })
+
+        //set isChosen to update UI with user choices
+        userAnswers.find(userAnswer => {
+            theData.map(question => {
+                question.allAnswers.find(answer => {
+                    if(userAnswer === answer.text)
+                    {
+                        setTheData(prevArray =>
+                            prevArray.map(question => ({
+                                ...question,
+                                allAnswers: question.allAnswers.map(answer =>
+                                    userAnswers.includes(answer.text)
+                                        ? { ...answer, isChosen: true }
+                                        : answer
                                 )
-                            )
-                        }
-                    })
-                }
+                            }))
+                        )
+                    }
+                })
             })
         })
-        
-        //set the correct answers to show up regardless of if the user chose them
-        correctAnswers.find(correctAnswer => {
-            theData.find(item => {
-                if(item.correct_answer === correctAnswer)
+
+        userAnswers.find((userAnswer, uIdx) => {
+            correctAnswers.find((correctAnswer, cIdx) => {
+                if(userAnswer === correctAnswer && uIdx === cIdx)
                 {
-                    setTheData(prevArray => (
-                        prevArray.map(question => (
-                            q.correct_answer === correctAnswer ? {...question, isRight: true} : q
-                        ))
-                    ))
+                    setCorrectCount(prevCount => prevCount + 1)
                 }
             })
         })
 
-        //this is kinda working but I need to be more granular. I need the specific item in allAnswers to have a boolean value changed so ONLY that option is colored RED.
-        //my current method would change a boolean for the whole question object so applying the boolean to an input option would make them all colored...
+        setIsSubmitted(true)
+        e.target.reset();
+    }
 
-        //i might ask Copilot for tips but not the whole solution
-
-
-
-
-        // correctAnswers.find(correctAnswer => {
-        //     userAnswers.find(userAnswer => {
-        //         if(correctAnswer === userAnswer)
-        //         {
-        //             theData.find(item => {
-        //                 if(item.allAnswers.includes(userAnswer))
-        //                 {
-        //                     setTheData(prevArray => (
-        //                         prevArray.map(question => (
-
-        //                         ))
-        //                     ))
-        //                 }
-        //             })
-        //             setCorrectCount(prevCount => prevCount + 1)
-        //         }
-        //     })
-        // })
-
+    function resetGame() {
+        setTheData([])
+        setTheCorrectAnswers([])
+        setCorrectCount(0)
+        setNewGame(prevValue => !prevValue)
     }
 
     return (
         <>
             <form className="questions-container" onSubmit={checkAnswers}>
                 {questions}
-                <button>Check Your Answers</button>
+                {!isSubmitted ? <button type="submit">Check Your Answers</button> : <button type="button" onClick={() => resetGame()}>Play Again</button>}
+                <p>Correct Answers {correctCount} / 5</p>
             </form>
             <Link to="/answers">TAKE ME TO: ANSWERS</Link>
         </>
     )
 }
-
-//I need to find out what properties I need to use in order to signal to the user and JS to switch a value and have the UI change
-//Current for loop kind of works but only for checking if every answer is correct
