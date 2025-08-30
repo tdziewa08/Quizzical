@@ -1,5 +1,4 @@
 import React from "react"
-import { Link } from "react-router-dom"
 import { decode } from "html-entities"
 
 export default function Questions() {
@@ -10,16 +9,77 @@ export default function Questions() {
     const [isSubmitted, setIsSubmitted] = React.useState(false)
     const [newGame, setNewGame] = React.useState(false)
 
-    console.log("CORRECT ANSWERS: " + correctAnswers)
-
     function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--)
+        for (let i = array.length - 1; i > 0; i--)
+            {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        return array;
+    }
+
+    function checkAnswers(e) {
+        e.preventDefault()
+        const form = e.target
+        const formData = new FormData(form)
+        const userAnswers = Array.from(formData.values())
+
+        setTheData(prevArray => (
+            prevArray.map((question, qIdx) => {
+                const correctAnswer = correctAnswers[qIdx]
+                const userAnswer = userAnswers[qIdx]
+
+                return {
+                    ...question,
+                    allAnswers: question.allAnswers.map(answer => (
+                        {
+                            ...answer,
+                            isCorrect: answer.text === correctAnswer,
+                            isChosen: answer.text === userAnswer
+                        }
+                    ))
+                }
+            })
+        ))
+        
+        let newCorrectCount = 0
+        userAnswers.forEach((ans, idx) => {
+            if(ans === correctAnswers[idx])
+            {
+                newCorrectCount +=1
+            }
+        })
+        setCorrectCount(newCorrectCount)
+        setIsSubmitted(true)
+    }
+
+    function handleSelect(qIdx, answerText) {
+        if(!isSubmitted)
         {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+            setTheData(prevArray =>
+                prevArray.map((question, idx) =>
+                    idx === qIdx
+                    ?
+                    {
+                        ...question,
+                        allAnswers: question.allAnswers.map(a => ({
+                            ...a,
+                            isChosen: a.text === answerText
+                        }))
+                    }
+                    :
+                    question
+                )
+            );
         }
-    return array;
-}
+    }
+
+    function resetGame() {
+        setTheData([])
+        setTheCorrectAnswers([])
+        setCorrectCount(0)
+        setNewGame(prevValue => !prevValue)
+    }
 
     React.useEffect(() => {
         fetch("https://opentdb.com/api.php?amount=5")
@@ -50,13 +110,23 @@ export default function Questions() {
                 <div className="answers">
                     {item.allAnswers.map(answer => {
                         return (
-                            <label className={`label-button ${answer.isChosen ? "-chosen" : ""} ${answer.isCorrect ? "-correct" : ""}`}>
+                            <label
+                                className=
+                                {
+                                    "label-button" +
+                                    (answer.isChosen && !isSubmitted ? " -selected" : "") +
+                                    (answer.isChosen && isSubmitted && !answer.isCorrect ? " -chosen" : "") +
+                                    (answer.isCorrect && isSubmitted ? " -correct" : "")
+                                }
+                            >
                                 <input 
                                     type="radio"
                                     name={`answer-${qIdx + 1}`}
                                     value={answer.text}
-                                    required
+                                    checked={answer.isChosen}
                                     disabled={isSubmitted}
+                                    onChange={() => handleSelect(qIdx, answer.text)}
+                                    required
                                 />
                                 {answer.text}
                             </label>
@@ -68,81 +138,23 @@ export default function Questions() {
     })
     : null
 
-    function checkAnswers(e) {
-        e.preventDefault()
-        console.log("Submitted but not refreshed")
-        const form = e.target
-        const formData = new FormData(form)
-        const userAnswers = Array.from(formData.values())
-        console.log("USER ANSWERS: " + userAnswers)
-
-        //set isCorrect to update UI with the correct answers
-         correctAnswers.find(correctAnswer => {
-             theData.find(item => {
-                 if(item.correct_answer === correctAnswer)
-                 {
-                     setTheData(prevArray => (
-                         prevArray.map(question => ({
-                            ...question,
-                            allAnswers: question.allAnswers.map(answer => (
-                                answer.text === correctAnswer ? {...answer, isCorrect: true} : answer
-                            ))
-                         }   
-                         ))
-                     ))
-                 }
-             })
-         })
-
-        //set isChosen to update UI with user choices
-        userAnswers.find(userAnswer => {
-            theData.map(question => {
-                question.allAnswers.find(answer => {
-                    if(userAnswer === answer.text)
-                    {
-                        setTheData(prevArray =>
-                            prevArray.map(question => ({
-                                ...question,
-                                allAnswers: question.allAnswers.map(answer =>
-                                    userAnswers.includes(answer.text)
-                                        ? { ...answer, isChosen: true }
-                                        : answer
-                                )
-                            }))
-                        )
-                    }
-                })
-            })
-        })
-
-        userAnswers.find((userAnswer, uIdx) => {
-            correctAnswers.find((correctAnswer, cIdx) => {
-                if(userAnswer === correctAnswer && uIdx === cIdx)
-                {
-                    setCorrectCount(prevCount => prevCount + 1)
-                }
-            })
-        })
-
-        setIsSubmitted(true)
-        e.target.reset();
-    }
-
-    function resetGame() {
-        setTheData([])
-        setTheCorrectAnswers([])
-        setCorrectCount(0)
-        setNewGame(prevValue => !prevValue)
-    }
-
     return (
         <>
+            {theData.length === 0 && <div className="loading-screen">Loading Questions...</div>}
             <form className="questions-container" onSubmit={checkAnswers}>
                 {questions}
-                {!isSubmitted ? <button type="submit">Check Your Answers</button> : <button type="button" onClick={() => resetGame()}>Play Again</button>}
-                <p>Correct Answers {correctCount} / 5</p>
+                <div className="results">
+                    {(isSubmitted && theData.length > 0) &&
+                        <>
+                            <p>You scored {correctCount}/5 correct answers</p>
+                            <button type="button" className="game-btn" onClick={resetGame}>Play Again</button>
+                        </>
+                    }
+                    {(!isSubmitted && theData.length > 0) &&
+                        <button type="submit" className="game-btn">Check Your Answers</button>
+                    }
+                </div>
             </form>
-            <Link to="/answers">TAKE ME TO: ANSWERS</Link>
         </>
     )
 }

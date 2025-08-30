@@ -15,6 +15,66 @@
 
 body {
   background-color: #F5F7FB;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+body::before {
+  width: 400px;
+  height: 400px;
+  background: #D6DBF5;
+  top: -200px;
+  right: -200px;
+}
+
+body::after {
+  width: 300px;
+  height: 300px;
+  background: #F8BCBC;
+  bottom: -150px;
+  left: -150px;
+}
+
+.main-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #293264;
+}
+
+.main-page > h1 {
+  font-size: 2.25rem;
+}
+
+.main-page > a {
+  color: #F5F7FB;
+  font-weight: bold;
+  background-color: #4D5B9E;
+  border: none;
+  border-radius: 1em;
+  padding: 1em 3.5em;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.loading-screen {
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: #293264;
 }
 
 .questions-container {
@@ -23,7 +83,8 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1em;
+  color: #293264;
+  padding: 2.5em 1em 1em 1em;
 }
 
 .question {
@@ -49,14 +110,13 @@ body {
 }
 
 .label-button {
-  display: inline-flex; /* or inline-flex */
-  padding: 10px 20px;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  cursor: pointer;
+  display: inline-flex;
   text-align: center;
-  margin-right: 10px; /* Adjust spacing as needed */
+  border: 1px solid #4D5B9E;
+  border-radius: 1em;
+  margin-right: 1em;
+  padding: .5em 2em;
+  cursor: pointer;
 }
 
 .label-button > input[type="radio"] {
@@ -66,24 +126,65 @@ body {
   margin: 0;
 }
 
-.label-button:has(input[type="radio"]:checked) {
+.label-button.-selected {
+  background-color: #D6DBF5;
+  border: none;
+}
+
+.label-button.-chosen {
+  background-color: #F8BCBC;
+  border: none;
+}
+
+.label-button.-correct {
+  background-color: #94D7A2;
+  border: none;
+}
+
+.label-button.-chosen.-correct,
+.label-button.-selected.-correct {
+  background-color: #94D7A2;
+  border: none;
+}
+
+.results {
+  display: flex;
+  width: 75%;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5em;
+}
+
+.results > p {
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding: 0 1em;
+}
+
+.game-btn {
+  color: #F5F7FB;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #4D5B9E;
+  border: none;
+  border-radius: 1em;
+  padding: 1em 3em;
+  cursor: pointer;
+}
+
+/* This selector waas too powerful so I had to add the .-selected class */
+/* .label-button:has(input[type="radio"]:checked) {
   background-color: lightblue;
 }
 
-.-chosen {
+.label-button.-chosen {
   background-color: red;
 }
 
-.-correct {
+.label-button .-correct {
   background-color: limegreen;
 }
 
-.-chosen .-correct {
-  background-color: limegreen;
-}
-
-.answers > span {
-  border: 1px solid red;
-  margin-right: 2em;
-  padding: .5em 1em;
-}
+.label-button.-chosen.-correct {
+  background: limegreen;
+} */
