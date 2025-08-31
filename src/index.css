@@ -172,6 +172,30 @@ body::after {
   cursor: pointer;
 }
 
+/* Phone Screen */
+@media (max-width: 600px) and (orientation: portrait) {
+  .questions-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 2.5em 0.5em 1em 0.5em;
+  }
+
+  .question {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .answers {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .answers > label {
+    margin-bottom: .75em;
+  }
+}
+
+
 /* This selector waas too powerful so I had to add the .-selected class */
 /* .label-button:has(input[type="radio"]:checked) {
   background-color: lightblue;
