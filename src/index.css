@@ -185,6 +185,12 @@ body::after {
     max-width: 500px;
   }
 
+  .question > p {
+    font-size: 1.1em;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
   .answers {
     width: 100%;
     flex-wrap: wrap;
